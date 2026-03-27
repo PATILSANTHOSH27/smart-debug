@@ -13,7 +13,7 @@ from app.models.schemas import (
 
 
 # ---- Configure Gemini ----
-_api_key = os.getenv("AIzaSyD_jipCdXexmzbK9EqqK1BSbMUo_OBWdaw", "")
+_api_key = os.getenv(""GEMINI_API_KEY","")
 _model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 if _api_key:
