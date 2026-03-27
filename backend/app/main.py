@@ -66,28 +66,6 @@ async def analyze(request: AnalyzeRequest):
 
 
 # ---- Serve Frontend ----
-_frontend_dir = Path(__file__).parent.parent / "frontend"
+from fastapi.staticfiles import StaticFiles
 
-if _frontend_dir.is_dir():
-    # Serve static assets (CSS, JS, images)
-    app.mount("/static", StaticFiles(directory=str(_frontend_dir)), name="static")
-
-    @app.get("/style.css")
-    async def serve_css():
-        return FileResponse(_frontend_dir / "style.css", media_type="text/css")
-
-    @app.get("/script.js")
-    async def serve_js():
-        return FileResponse(_frontend_dir / "script.js", media_type="application/javascript")
-
-    @app.get("/")
-    async def serve_index():
-        return FileResponse(_frontend_dir / "index.html")
-
-    # Catch-all for SPA-like routing (return index.html for unknown paths)
-    @app.get("/{full_path:path}")
-    async def serve_spa(full_path: str):
-        file_path = _frontend_dir / full_path
-        if file_path.is_file():
-            return FileResponse(file_path)
-        return FileResponse(_frontend_dir / "index.html")
+app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
