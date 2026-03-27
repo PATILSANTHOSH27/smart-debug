@@ -1,72 +1,58 @@
-from groq import Groq
+import requests
 import os
 from app.models.schemas import (
     AnalyzeResponse, Issue, Scores, Breakdown, AnalysisMode
 )
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-
-def _build_prompt(code: str, language: str, mode: AnalysisMode) -> str:
-    return f"""
-You are an expert code analyzer.
-
-Analyze the following {language} code based on mode: {mode}.
-
-Return:
-- List of issues
-- Improved code
-- Explanation
-
-Code:
-{code}
-"""
+def call_openrouter(prompt: str):
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "deepseek/deepseek-chat",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
+    )
+    return response.json()
 
 
 async def analyze_code(code: str, language: str, mode: AnalysisMode) -> AnalyzeResponse:
     try:
-        prompt = _build_prompt(code, language, mode)
+        prompt = f"Analyze this {language} code:\n{code}"
 
-        response = client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-
-        result = response.choices[0].message.content
+        data = call_openrouter(prompt)
+        result = data["choices"][0]["message"]["content"]
 
         return AnalyzeResponse(
-            issues=[Issue(
-                type="info",
-                severity="info",
-                message=result[:200]  # short preview
-            )],
+            issues=[Issue(type="info", severity="info", message=result[:200])],
             optimized_code=code,
             explanation=result,
             scores=Scores(
-                quality=75,
-                performance=70,
-                security=70,
-                maintainability=75
+                quality=80,
+                performance=75,
+                security=75,
+                maintainability=80
             ),
             breakdown=Breakdown(
-                complexity=70,
-                readability=75,
-                best_practices=70,
-                error_handling=70
+                complexity=75,
+                readability=80,
+                best_practices=75,
+                error_handling=75
             )
         )
 
     except Exception as e:
         return AnalyzeResponse(
-            issues=[Issue(
-                type="error",
-                severity="error",
-                message=str(e)
-            )],
+            issues=[Issue(type="error", severity="error", message=str(e))],
             optimized_code=code,
-            explanation="AI service failed",
+            explanation="AI failed",
             scores=Scores(
                 quality=50,
                 performance=50,
