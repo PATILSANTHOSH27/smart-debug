@@ -7,7 +7,7 @@ import json
 import os
 import re
 import google.generativeai as genai
-from backend.models.schemas import (
+from app.models.schemas import (
     AnalyzeResponse, Issue, Scores, Breakdown, AnalysisMode
 )
 
