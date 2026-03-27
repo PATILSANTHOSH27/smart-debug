@@ -16,8 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from models.schemas import AnalyzeRequest, AnalyzeResponse
-from services.ai_service import analyze_code
+from app.models.schemas import AnalyzeRequest, AnalyzeResponse
+from app.services.ai_service import analyze_code
 
 # ---- App ----
 app = FastAPI(
