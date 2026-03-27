@@ -67,6 +67,16 @@ async def analyze_code(code: str, language: str, mode: AnalysisMode) -> AnalyzeR
             )],
             optimized_code=code,
             explanation="AI service failed",
-            scores=Scores(50, 50, 50, 50),
-            breakdown=Breakdown(50, 50, 50, 50)
+            scores=Scores(
+                quality=50,
+                performance=50,
+                security=50,
+                maintainability=50
+            ),
+            breakdown=Breakdown(
+                complexity=50,
+                readability=50,
+                best_practices=50,
+                error_handling=50
+            )
         )
