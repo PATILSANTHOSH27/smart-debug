@@ -1,5 +1,6 @@
 import requests
 import os
+import re
 import json
 
 from app.models.schemas import (
@@ -30,12 +31,9 @@ async def analyze_code(code: str, language: str, mode: AnalysisMode) -> AnalyzeR
         prompt = f"""
         You are an expert code debugger.
 
-        Analyze the following {language} code.
+        Return ONLY valid JSON. No text outside JSON.
 
-        STRICT RULES:
-        - Return ONLY valid JSON
-        - No explanation outside JSON
-        - No markdown
+        If JSON is invalid, response will be rejected.
 
         FORMAT:
         {{
@@ -45,16 +43,16 @@ async def analyze_code(code: str, language: str, mode: AnalysisMode) -> AnalyzeR
           "optimized_code": "fixed code here",
           "explanation": "clear explanation",
           "scores": {{
-            "quality": 0-100,
-            "performance": 0-100,
-            "security": 0-100,
-            "maintainability": 0-100
+            "quality": 0,
+            "performance": 0,
+            "security": 0,
+            "maintainability": 0
           }},
           "breakdown": {{
-            "complexity": 0-100,
-            "readability": 0-100,
-            "best_practices": 0-100,
-            "error_handling": 0-100
+            "complexity": 0,
+            "readability": 0,
+            "best_practices": 0,
+            "error_handling": 0
           }}
         }}
 
@@ -68,7 +66,8 @@ async def analyze_code(code: str, language: str, mode: AnalysisMode) -> AnalyzeR
         raw = data["choices"][0]["message"]["content"]
 
         try:
-            parsed = json.loads(raw)
+            json_text = re.search(r"\{.*\}", raw, re.DOTALL).group()
+            parsed = json.loads(json_text)
         except:
             parsed = {
                 "issues": [{"type": "info", "severity": "info", "message": raw}],
@@ -79,21 +78,11 @@ async def analyze_code(code: str, language: str, mode: AnalysisMode) -> AnalyzeR
             }
 
         return AnalyzeResponse(
-            issues=[Issue(type="info", severity="info", message=result[:200])],
-            optimized_code=code,
-            explanation=result,
-            scores=Scores(
-                quality=80,
-                performance=75,
-                security=75,
-                maintainability=80
-            ),
-            breakdown=Breakdown(
-                complexity=75,
-                readability=80,
-                best_practices=75,
-                error_handling=75
-            )
+            issues=[Issue(**issue) for issue in parsed.get("issues", [])],
+            optimized_code=parsed.get("optimized_code", code),
+            explanation=parsed.get("explanation", ""),
+            scores=Scores(**parsed.get("scores", {})),
+            breakdown=Breakdown(**parsed.get("breakdown", {}))
         )
 
     except Exception as e:
