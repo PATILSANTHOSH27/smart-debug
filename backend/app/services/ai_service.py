@@ -1,5 +1,7 @@
 import requests
 import os
+import json
+
 from app.models.schemas import (
     AnalyzeResponse, Issue, Scores, Breakdown, AnalysisMode
 )
@@ -61,7 +63,20 @@ async def analyze_code(code: str, language: str, mode: AnalysisMode) -> AnalyzeR
         """
 
         data = call_openrouter(prompt)
-        result = data["choices"][0]["message"]["content"]
+        
+
+        raw = data["choices"][0]["message"]["content"]
+
+        try:
+            parsed = json.loads(raw)
+        except:
+            parsed = {
+                "issues": [{"type": "info", "severity": "info", "message": raw}],
+                "optimized_code": code,
+                "explanation": raw,
+                "scores": {"quality": 50, "performance": 50, "security": 50, "maintainability": 50},
+                "breakdown": {"complexity": 50, "readability": 50, "best_practices": 50, "error_handling": 50}
+            }
 
         return AnalyzeResponse(
             issues=[Issue(type="info", severity="info", message=result[:200])],
