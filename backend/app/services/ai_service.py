@@ -25,7 +25,40 @@ def call_openrouter(prompt: str):
 
 async def analyze_code(code: str, language: str, mode: AnalysisMode) -> AnalyzeResponse:
     try:
-        prompt = f"Analyze this {language} code:\n{code}"
+        prompt = f"""
+        You are an expert code debugger.
+
+        Analyze the following {language} code.
+
+        STRICT RULES:
+        - Return ONLY valid JSON
+        - No explanation outside JSON
+        - No markdown
+
+        FORMAT:
+        {{
+          "issues": [
+            {{"type": "error", "severity": "error", "message": "describe issue"}}
+          ],
+          "optimized_code": "fixed code here",
+          "explanation": "clear explanation",
+          "scores": {{
+            "quality": 0-100,
+            "performance": 0-100,
+            "security": 0-100,
+            "maintainability": 0-100
+          }},
+          "breakdown": {{
+            "complexity": 0-100,
+            "readability": 0-100,
+            "best_practices": 0-100,
+            "error_handling": 0-100
+          }}
+        }}
+
+        CODE:
+        {code}
+        """
 
         data = call_openrouter(prompt)
         result = data["choices"][0]["message"]["content"]
